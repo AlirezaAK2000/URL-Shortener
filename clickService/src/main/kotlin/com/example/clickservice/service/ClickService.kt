@@ -1,9 +1,13 @@
 package com.example.clickservice.service
 
 import com.example.clickservice.controller.model.kafka.ClickMessage
+import com.example.clickservice.controller.model.response.ClickCountResponse
+import com.example.clickservice.controller.model.response.ClickResponse
 import com.example.clickservice.repository.ClickRepository
 import com.example.clickservice.repository.entity.Click
 import com.example.clickservice.service.model.aggregation.ClickPopulation
+import com.example.clickservice.service.model.request.ClickCountRequest
+import com.example.clickservice.service.model.request.ClickRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -46,9 +50,22 @@ class ClickService(
         )
     }
 
-    fun findByURLId(URLId: String) = clickRepository.findByURLId(URLId)
+    fun findByURLId(URLId: String) = clickRepository.findByURLId(URLId)?.map { ClickResponse(it) }
 
-    fun findAllURLClickCountByDate(
+    fun countClicksByURLId(body : ClickCountRequest) : List<ClickCountResponse> {
+        val res = findAllURLClickCountByDate(
+            startDate = body.start,
+            endDate = body.end
+        )
+        return res.map {
+            ClickCountResponse(
+                count = it.count,
+                URLId = it.URLId
+            )
+        }
+    }
+
+    private fun findAllURLClickCountByDate(
         startDate: Date,
         endDate : Date
     ) : MutableList<ClickPopulation>{
@@ -69,7 +86,7 @@ class ClickService(
         return result.mappedResults
     }
 
-    fun findAll() = clickRepository.findAll()
+    fun findAll() = clickRepository.findAll().map { ClickResponse(it) }
 
 
 }

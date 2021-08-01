@@ -16,26 +16,13 @@ class ClickController(
     @GetMapping("/count")
     fun countClicksByURLId(
         @RequestBody body: ClickCountRequest
-    ): List<ClickCountResponse> {
-        println(body)
-        val res = clickService.findAllURLClickCountByDate(
-            startDate = body.start,
-            endDate = body.end
-        )
-        return res.map {
-            ClickCountResponse(
-                count = it.count,
-                URLId = it.URLId
-            )
-        }
+    ): List<ClickCountResponse> = clickService.countClicksByURLId(body)
 
-    }
     @GetMapping
-    fun findAllClicks(): List<ClickResponse> {
-        val clicks = clickService.findAll()
+    fun findAllClicks(): List<ClickResponse> = clickService.findAll()
 
-        return clicks.map {
-            ClickResponse.fromEntity(it)
-        }
-    }
+    @GetMapping("/{id}")
+    fun findByURLId(
+        @PathVariable id : String
+    ) : List<ClickResponse>? = clickService.findByURLId(id)
 }

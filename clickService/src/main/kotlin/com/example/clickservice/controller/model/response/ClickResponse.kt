@@ -14,14 +14,11 @@ data class ClickResponse(
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "UTC")
     val clickTime: Date?
 ){
-    companion object{
-        fun fromEntity(click: Click): ClickResponse{
-            return ClickResponse(
-                id = click.id.toString(),
-                URLId = click.URLId,
-                clickTime = click.clickTime
-            )
-        }
-    }
+    constructor(click: Click):this(
+        id = click.id.toString(),
+        URLId = click.URLId,
+        clickTime = click.clickTime
+    )
+
 }
 
