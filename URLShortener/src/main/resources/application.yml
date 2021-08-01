@@ -5,6 +5,6 @@ spring:
 custom:
   baseurl : localhost:8080
   topicName : click
-#spring.kafka.topic-name=click
-#spring.kafka.replica-factor=1
-#spring.kafka.number-of-partitions=5
+
+server:
+  port: 8080
