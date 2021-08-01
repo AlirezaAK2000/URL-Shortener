@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.baseurl",
+      "type": "java.lang.String",
+      "description": "Description for spring.baseurl."
+  }
+] }

@@ -1,0 +1,12 @@
+
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset : latest
+
+server:
+  port: 8090
+
+
+custom:
+  topic: click
