@@ -8,21 +8,26 @@ import org.springframework.web.bind.annotation.*
 
 
 @RestController
-@RequestMapping("/api/click")
+@RequestMapping("/api/clicks")
 class ClickController(
     val clickService: ClickService
 ) {
 
     @GetMapping("/count")
-    fun countClicksByURLId(
+    fun countClicks(
         @RequestBody body: ClickCountRequest
-    ): List<ClickCountResponse> = clickService.countClicksByURLId(body)
+    ): List<ClickCountResponse> = clickService.countClicks(body)
 
     @GetMapping
     fun findAllClicks(): List<ClickResponse> = clickService.findAll()
 
     @GetMapping("/{id}")
     fun findByURLId(
+        @PathVariable id: String
+    ): List<ClickResponse>? = clickService.findByURLId(id)
+
+    @GetMapping("/count/{id}")
+    fun findClickCountByURLId(
         @PathVariable id : String
-    ) : List<ClickResponse>? = clickService.findByURLId(id)
+    ): ClickCountResponse = clickService.countClicksByURLId(id)
 }

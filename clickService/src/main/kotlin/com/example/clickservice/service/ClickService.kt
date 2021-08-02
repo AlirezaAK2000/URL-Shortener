@@ -7,7 +7,6 @@ import com.example.clickservice.repository.ClickRepository
 import com.example.clickservice.repository.entity.Click
 import com.example.clickservice.service.model.aggregation.ClickPopulation
 import com.example.clickservice.service.model.request.ClickCountRequest
-import com.example.clickservice.service.model.request.ClickRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -27,13 +26,19 @@ class ClickService(
 ) {
 
     private final val dateFormatter = SimpleDateFormat(DATE_FORMAT)
+
     init {
         dateFormatter.timeZone = TimeZone.getTimeZone("UTC")
 
     }
+
     companion object {
         const val DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS\'Z\'"
     }
+
+    fun countClicksByURLId(
+        id : String
+    ) : ClickCountResponse = ClickCountResponse(count = clickRepository.countClicksByURLId(id) , URLId = id)
 
     @KafkaListener(
         topics = ["\${custom.topic}"],
@@ -52,7 +57,7 @@ class ClickService(
 
     fun findByURLId(URLId: String) = clickRepository.findByURLId(URLId)?.map { ClickResponse(it) }
 
-    fun countClicksByURLId(body : ClickCountRequest) : List<ClickCountResponse> {
+    fun countClicks(body: ClickCountRequest): List<ClickCountResponse> {
         val res = findAllURLClickCountByDate(
             startDate = body.start,
             endDate = body.end
@@ -67,8 +72,8 @@ class ClickService(
 
     private fun findAllURLClickCountByDate(
         startDate: Date,
-        endDate : Date
-    ) : MutableList<ClickPopulation>{
+        endDate: Date
+    ): MutableList<ClickPopulation> {
 
         val criteria = Criteria().andOperator(Criteria.where(Click.CLICK_TIME).gte(startDate).lte(endDate))
         val matcherStage = Aggregation.match(criteria)
@@ -80,7 +85,7 @@ class ClickService(
             sortStage
         )
         val result = mongoTemplate.aggregate(
-            aggregation , Click.COLLECTION_NAME , ClickPopulation::class.java
+            aggregation, Click.COLLECTION_NAME, ClickPopulation::class.java
         )
 
         return result.mappedResults

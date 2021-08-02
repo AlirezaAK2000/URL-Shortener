@@ -17,8 +17,6 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
 import org.springframework.kafka.support.serializer.JsonDeserializer
 
 
-
-
 @EnableKafka
 @Configuration
 internal class KafkaConsumerConfig {
