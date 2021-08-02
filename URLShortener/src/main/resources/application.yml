@@ -5,6 +5,6 @@ spring:
 custom:
   baseurl : localhost:8080
   topicName : click
-
+  pageSize : 5
 server:
   port: 8080

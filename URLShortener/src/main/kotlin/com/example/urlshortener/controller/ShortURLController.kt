@@ -5,7 +5,6 @@ import com.example.urlshortener.controller.model.response.ShortURLUpdateResponse
 import com.example.urlshortener.service.ShortURLService
 import com.example.urlshortener.service.model.shortURL.CreateShortURLRequest
 import com.example.urlshortener.service.model.shortURL.FindShortURLRequest
-import com.example.urlshortener.service.model.shortURL.ShortURLRequest
 import com.example.urlshortener.service.model.shortURL.UpdateShortURLRequest
 import org.springframework.web.bind.annotation.*
 
@@ -16,7 +15,10 @@ class ShortURLController(
     val shortURLService: ShortURLService,
 ) {
     @GetMapping("")
-    fun findAllShortURLs(): List<ShortURLResponse> = shortURLService.findAll()
+    fun findAllShortURLs(
+        @RequestParam(required = false) page: Int,
+        @RequestParam(required = false) size: Int
+    ): Map<String, Any> = shortURLService.findAll(size = size, pageNum = page)
 
     @PostMapping("")
     fun createShortURL(
@@ -41,7 +43,7 @@ class ShortURLController(
     @GetMapping("/orgurl")
     fun findByOriginalURL(
         @RequestBody body: FindShortURLRequest
-    ):ShortURLResponse = shortURLService.findByOriginalURL(body)
+    ): ShortURLResponse = shortURLService.findByOriginalURL(body)
 
     @DeleteMapping("")
     fun deleteByOriginalURL(

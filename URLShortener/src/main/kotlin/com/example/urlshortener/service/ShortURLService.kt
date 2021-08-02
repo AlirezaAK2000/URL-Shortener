@@ -11,6 +11,8 @@ import com.example.urlshortener.service.model.shortURL.UpdateShortURLRequest
 import com.example.urlshortener.utils.RandomString
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
@@ -31,18 +33,42 @@ class ShortURLService(
     val kafkaTemplate: KafkaTemplate<String, String>,
     val mapper: ObjectMapper,
     @Value("\${custom.topicName}")
-    val topicName: String
+    val topicName: String,
+    val URLMatcher: Pattern
 ) {
 
     val BASE_URL = "$BASE/api/url"
-    private val URL_REGEX = "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$"
-    val URL_PATTERN: Pattern = Pattern.compile(URL_REGEX)
+
+    companion object {
+
+        @Value("\${custom.pageSize}")
+        const val DEFAULT_PAGE_SIZE = 4
+    }
 
 
-    fun findAll(): List<ShortURLResponse> =
-        shortURLRepository.findAll(Sort.by(Sort.Direction.DESC, ShortURL.CREATE_DATE)).map {
-            ShortURLResponse(it)
-        }
+    fun findAll(size: Int, pageNum: Int): Map<String, Any> {
+        val pageable = PageRequest.of(pageNum ?: 0, size ?: DEFAULT_PAGE_SIZE)
+        val dataPage: Page<ShortURLResponse> =
+            shortURLRepository.findAll(Sort.by(Sort.Direction.DESC, ShortURL.CREATE_DATE), pageable).map {
+                ShortURLResponse(it)
+            }
+        return createPagingResponse(dataPage)
+    }
+
+    private fun createPagingResponse(
+        dataPage: Page<ShortURLResponse>
+    ): Map<String, Any> {
+        val data = dataPage.content
+        val numberOfPages = dataPage.totalPages
+        val numberOfItems = dataPage.totalElements
+        val currentPage = dataPage.number
+        return mapOf(
+            "data" to data,
+            "numberOfPages" to numberOfPages,
+            "numberOfItems" to numberOfItems,
+            "currentPage" to currentPage
+        )
+    }
 
     fun findById(id: String): ShortURLResponse? {
         val query = shortURLRepository.findById(id)
@@ -51,15 +77,14 @@ class ShortURLService(
 
     fun createShortURL(url: String): ShortURLResponse? {
 
-        val matcher = URL_PATTERN.matcher(url)
+        val matcher = URLMatcher.matcher(url)
 
         if (!matcher.find())
             throw URLIsNotValid()
 
-        val query: ShortURL? = shortURLRepository.findByOriginalURLHash(url.hashCode())
-
-        if (query != null)
-            return ShortURLResponse(query)
+        shortURLRepository.findByOriginalURLHash(url.hashCode())?.let {
+            return ShortURLResponse(it)
+        }
 
         var generatedKey = RandomString.getAlphaNumericString()
         while (shortURLRepository.findById(generatedKey).isPresent)
@@ -84,7 +109,7 @@ class ShortURLService(
 
     fun updateOriginalURL(req: UpdateShortURLRequest): ShortURLUpdateResponse {
 
-        val matcher = URL_PATTERN.matcher(req.newOriginalURL)
+        val matcher = URLMatcher.matcher(req.newOriginalURL)
 
         if (!matcher.find())
             throw URLIsNotValid()
@@ -95,7 +120,7 @@ class ShortURLService(
         )
         val update = Update()
         update.set(ShortURL.ORIGINAL_URL, req.newOriginalURL)
-        update.set(ShortURL.ORIGINAL_URL_HASH , req.newOriginalURL.hashCode())
+        update.set(ShortURL.ORIGINAL_URL_HASH, req.newOriginalURL.hashCode())
         return ShortURLUpdateResponse(
             updated = mongoTemplate.updateFirst(query, update, ShortURL::class.java).modifiedCount > 0
         )
