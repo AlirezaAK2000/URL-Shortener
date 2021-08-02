@@ -17,6 +17,6 @@ class RedirectController(
     fun redirectToOriginalURL(
         @PathVariable id: String,
         response: HttpServletResponse
-    ): Unit = shortURLService.redirectToOriginalURL(id, response)
+    ): Unit = response.sendRedirect(shortURLService.redirectToOriginalURL(id))
 
 }

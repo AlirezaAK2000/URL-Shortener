@@ -8,6 +8,7 @@ import com.example.urlshortener.repository.ShortURLRepository
 import com.example.urlshortener.repository.entity.ShortURL
 import com.example.urlshortener.service.model.shortURL.FindShortURLRequest
 import com.example.urlshortener.service.model.shortURL.UpdateShortURLRequest
+import com.example.urlshortener.utils.HashLib
 import com.example.urlshortener.utils.RandomString
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
@@ -15,20 +16,16 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.query.Criteria
-import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
-import javax.servlet.http.HttpServletResponse
 
 
 @Service
 class ShortURLService(
     val shortURLRepository: ShortURLRepository,
     @Value("\${custom.baseurl}")
-    val BASE: String,
+    private val BASE: String,
     val mongoTemplate: MongoTemplate,
     val kafkaTemplate: KafkaTemplate<String, String>,
     val mapper: ObjectMapper,
@@ -37,14 +34,12 @@ class ShortURLService(
     val URLMatcher: Pattern
 ) {
 
-    val BASE_URL = "$BASE/api/url"
+    private val BASE_URL = "$BASE/api/url"
 
     companion object {
-
         @Value("\${custom.pageSize}")
         const val DEFAULT_PAGE_SIZE = 4
     }
-
 
     fun findAll(size: Int, pageNum: Int): Map<String, Any> {
         val pageable = PageRequest.of(pageNum ?: 0, size ?: DEFAULT_PAGE_SIZE)
@@ -55,34 +50,15 @@ class ShortURLService(
         return createPagingResponse(dataPage)
     }
 
-    private fun createPagingResponse(
-        dataPage: Page<ShortURLResponse>
-    ): Map<String, Any> {
-        val data = dataPage.content
-        val numberOfPages = dataPage.totalPages
-        val numberOfItems = dataPage.totalElements
-        val currentPage = dataPage.number
-        return mapOf(
-            "data" to data,
-            "numberOfPages" to numberOfPages,
-            "numberOfItems" to numberOfItems,
-            "currentPage" to currentPage
-        )
-    }
-
     fun findById(id: String): ShortURLResponse? {
         val query = shortURLRepository.findById(id)
         return if (query.isPresent) ShortURLResponse(query.get()) else null
     }
 
     fun createShortURL(url: String): ShortURLResponse? {
+        validateURL(url)
 
-        val matcher = URLMatcher.matcher(url)
-
-        if (!matcher.find())
-            throw URLIsNotValid()
-
-        shortURLRepository.findByOriginalURLHash(url.hashCode())?.let {
+        shortURLRepository.findByOriginalURLHash(HashLib.generateHash(url))?.let {
             return ShortURLResponse(it)
         }
 
@@ -101,52 +77,62 @@ class ShortURLService(
     fun deleteById(id: String): Unit = shortURLRepository.deleteById(id)
 
     fun deleteByOriginalURL(req: FindShortURLRequest): Unit =
-        shortURLRepository.deleteByOriginalURLHash(req.originalURL.hashCode())
+        shortURLRepository.deleteByOriginalURLHash(HashLib.generateHash(req.originalURL))
 
     fun findByOriginalURL(
         req: FindShortURLRequest
-    ): ShortURLResponse = ShortURLResponse(shortURLRepository.findByOriginalURLHash(req.originalURL.hashCode())!!)
+    ): ShortURLResponse =
+        ShortURLResponse(shortURLRepository.findByOriginalURLHash(HashLib.generateHash(req.originalURL))!!)
+
 
     fun updateOriginalURL(req: UpdateShortURLRequest): ShortURLUpdateResponse {
-
-        val matcher = URLMatcher.matcher(req.newOriginalURL)
-
-        if (!matcher.find())
-            throw URLIsNotValid()
-
-        val query = Query()
-        query.addCriteria(
-            Criteria.where(ShortURL.ORIGINAL_URL_HASH).`is`(req.originalURL.hashCode())
-        )
-        val update = Update()
-        update.set(ShortURL.ORIGINAL_URL, req.newOriginalURL)
-        update.set(ShortURL.ORIGINAL_URL_HASH, req.newOriginalURL.hashCode())
+        validateURL(req.newOriginalURL)
+        val res = shortURLRepository.updateOriginalURL(req)
         return ShortURLUpdateResponse(
-            updated = mongoTemplate.updateFirst(query, update, ShortURL::class.java).modifiedCount > 0
+            updated = res.modifiedCount > 0
         )
-    }
-
-    private fun sendMessage(topic: String, msg: Click): Unit {
-        kafkaTemplate.send(topic, mapper.writeValueAsString(msg))
     }
 
     fun redirectToOriginalURL(
-        id: String,
-        response: HttpServletResponse
-    ): Unit {
+        id: String
+    ): String? {
         val query = shortURLRepository.findById(id)
 
         if (query.isPresent) {
             val obj = query.get()
             sendMessage(
-                topicName, Click(
-                    id = obj.id
-                )
+                topicName, Click(id = obj.id)
             )
-            response.sendRedirect(obj.originalUrl)
+            return obj.originalUrl
         } else
             throw URLIsNotValid("there is no mapping for the specified URL")
 
+    }
+
+    private fun createPagingResponse(
+        dataPage: Page<ShortURLResponse>
+    ): Map<String, Any> {
+        val data = dataPage.content
+        val numberOfPages = dataPage.totalPages
+        val numberOfItems = dataPage.totalElements
+        val currentPage = dataPage.number
+        return mapOf(
+            "data" to data,
+            "numberOfPages" to numberOfPages,
+            "numberOfItems" to numberOfItems,
+            "currentPage" to currentPage
+        )
+    }
+
+    private fun sendMessage(topic: String, msg: Click) {
+        kafkaTemplate.send(topic, mapper.writeValueAsString(msg))
+    }
+
+    private fun validateURL(url: String) {
+        val matcher = URLMatcher.matcher(url)
+
+        if (!matcher.find())
+            throw URLIsNotValid()
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.urlshortener.repository.entity
 
+import com.example.urlshortener.utils.HashLib
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -21,7 +22,7 @@ class ShortURL(
     val createDate : Date = Date(),
 
     @Field(ORIGINAL_URL_HASH)
-    val originalURLHash:Int = originalUrl.hashCode()
+    val originalURLHash:String = HashLib.generateHash(originalUrl)
 
 ){
 
