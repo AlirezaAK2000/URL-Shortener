@@ -41,7 +41,7 @@ class ShortURLController(
     @GetMapping("/orgurl")
     fun findByOriginalURL(
         @RequestBody body: FindShortURLRequest
-    ) = shortURLService.findByOriginalURL(body)
+    ):ShortURLResponse = shortURLService.findByOriginalURL(body)
 
     @DeleteMapping("")
     fun deleteByOriginalURL(
