@@ -1,4 +1,4 @@
-package com.example.clickservice.controller.model.response
+package com.example.clickservice.controller.model
 
 import com.example.clickservice.repository.entity.Click
 

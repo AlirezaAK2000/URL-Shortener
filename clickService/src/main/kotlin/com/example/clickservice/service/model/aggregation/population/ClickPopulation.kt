@@ -1,4 +1,4 @@
-package com.example.clickservice.service.model.aggregation
+package com.example.clickservice.service.model.aggregation.population
 
 import com.example.clickservice.repository.entity.Click
 import org.bson.types.ObjectId

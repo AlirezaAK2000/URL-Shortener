@@ -6,5 +6,5 @@ import java.util.*
 data class ClickRequest(
     val id : String?,
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "UTC")
-    val click_date : Date
+    val clickDate : Date
     )

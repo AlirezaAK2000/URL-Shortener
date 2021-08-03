@@ -15,13 +15,12 @@ data class Click (
     @Field(URL_ID)
     val URLId :String,
 
-//    @Indexed
     @Field(CLICK_TIME)
     val clickTime : Date?
 ){
     companion object{
-        const val CLICK_TIME = "click_date"
-        const val URL_ID = "url_id"
-        const val COLLECTION_NAME = "click"
+        const val CLICK_TIME = "clickDate"
+        const val URL_ID = "URLId"
+        const val COLLECTION_NAME = "Clicks"
     }
 }

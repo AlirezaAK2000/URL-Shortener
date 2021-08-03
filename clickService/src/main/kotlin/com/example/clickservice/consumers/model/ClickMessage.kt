@@ -1,4 +1,4 @@
-package com.example.clickservice.controller.model.kafka
+package com.example.clickservice.consumers.model
 
 import java.util.*
 

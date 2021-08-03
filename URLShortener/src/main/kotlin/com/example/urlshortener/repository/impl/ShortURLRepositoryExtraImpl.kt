@@ -1,7 +1,7 @@
 package com.example.urlshortener.repository.impl
 
 import com.example.urlshortener.repository.entity.ShortURL
-import com.example.urlshortener.repository.extra.ShortUrlRepoExtra
+import com.example.urlshortener.repository.extra.ShortUrlRepositoryExtra
 import com.example.urlshortener.service.model.shortURL.UpdateShortURLRequest
 import com.example.urlshortener.utils.HashLib
 import com.mongodb.client.result.UpdateResult
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Repository
 
 
 @Repository
-class ShortUrlRepoExtraImpl(
+class ShortUrlRepositoryExtraImpl(
     private val mongoTemplate: MongoTemplate
-) : ShortUrlRepoExtra {
-    override fun updateOriginalURL(req: UpdateShortURLRequest): UpdateResult {
+) : ShortUrlRepositoryExtra {
+    override fun updateOriginalURL(req: UpdateShortURLRequest): Boolean {
         val query = Query()
         query.addCriteria(
             Criteria.where(ShortURL.ORIGINAL_URL_HASH).`is`(HashLib.generateHash(req.originalURL))
@@ -24,6 +24,6 @@ class ShortUrlRepoExtraImpl(
         val update = Update()
         update.set(ShortURL.ORIGINAL_URL, req.newOriginalURL)
         update.set(ShortURL.ORIGINAL_URL_HASH, HashLib.generateHash(req.newOriginalURL))
-        return mongoTemplate.updateFirst(query, update, ShortURL::class.java)
+        return mongoTemplate.updateFirst(query, update, ShortURL::class.java).modifiedCount > 0
     }
 }
