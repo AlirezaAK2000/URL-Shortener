@@ -16,8 +16,8 @@ class ShortURLController(
 ) {
     @GetMapping("")
     fun findAllShortURLs(
-        @RequestParam(required = false) page: Int,
-        @RequestParam(required = false) size: Int
+        @RequestParam(required = false) page: Integer?,
+        @RequestParam(required = false) size: Integer?
     ): Map<String, Any> = shortURLService.findAll(size = size, pageNum = page)
 
     @PostMapping("")

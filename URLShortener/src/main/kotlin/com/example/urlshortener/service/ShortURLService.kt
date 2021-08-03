@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
@@ -26,7 +25,6 @@ class ShortURLService(
     val shortURLRepository: ShortURLRepository,
     @Value("\${custom.baseurl}")
     private val BASE: String,
-    val mongoTemplate: MongoTemplate,
     val kafkaTemplate: KafkaTemplate<String, String>,
     val mapper: ObjectMapper,
     @Value("\${custom.topicName}")
@@ -41,10 +39,11 @@ class ShortURLService(
         const val DEFAULT_PAGE_SIZE = 4
     }
 
-    fun findAll(size: Int, pageNum: Int): Map<String, Any> {
-        val pageable = PageRequest.of(pageNum ?: 0, size ?: DEFAULT_PAGE_SIZE)
+    fun findAll(size: Integer?, pageNum: Integer?): Map<String, Any> {
+        val pageable = PageRequest.of((pageNum ?: 0) as Int,
+            (size ?: DEFAULT_PAGE_SIZE) as Int, Sort.Direction.DESC ,ShortURL.CREATE_DATE )
         val dataPage: Page<ShortURLResponse> =
-            shortURLRepository.findAll(Sort.by(Sort.Direction.DESC, ShortURL.CREATE_DATE), pageable).map {
+            shortURLRepository.findAll(pageable).map {
                 ShortURLResponse(it)
             }
         return createPagingResponse(dataPage)
@@ -68,7 +67,7 @@ class ShortURLService(
 
         val obj = ShortURL(
             id = generatedKey,
-            originalUrl = url
+            originalURL = url
         )
 
         return ShortURLResponse(shortURLRepository.insert(obj))
@@ -87,9 +86,9 @@ class ShortURLService(
 
     fun updateOriginalURL(req: UpdateShortURLRequest): ShortURLUpdateResponse {
         validateURL(req.newOriginalURL)
-        val res = shortURLRepository.updateOriginalURL(req)
+        val res = shortURLRepository.updateByOriginalURL(req)
         return ShortURLUpdateResponse(
-            updated = res.modifiedCount > 0
+            updated = res
         )
     }
 
@@ -103,7 +102,7 @@ class ShortURLService(
             sendMessage(
                 topicName, Click(id = obj.id)
             )
-            return obj.originalUrl
+            return obj.originalURL
         } else
             throw URLIsNotValid("there is no mapping for the specified URL")
 
