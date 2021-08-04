@@ -4,8 +4,10 @@ import com.example.clickservice.controller.model.ClickCountPerDayResponse
 import com.example.clickservice.controller.model.ClickCountPerHourResponse
 import com.example.clickservice.controller.model.ClickCountResponse
 import com.example.clickservice.controller.model.ClickResponse
+import com.example.clickservice.enums.TimeInterval
 import com.example.clickservice.service.model.request.ClickCountRequest
 import com.example.clickservice.service.ClickService
+import com.example.clickservice.service.model.aggregation.population.ClickTimeIntervalPopulation
 import org.springframework.web.bind.annotation.*
 
 
@@ -18,31 +20,18 @@ class ClickController(
     @GetMapping("/count")
     fun countClicks(
         @RequestBody body: ClickCountRequest
-    ): List<ClickCountResponse> = clickService.countClicks(body)
+    ): List<ClickCountResponse> = clickService.findAllURLClickCountByDate(body)
 
     @GetMapping("/{id}")
     fun findByURLId(
         @PathVariable id: String
     ): List<ClickResponse>? = clickService.findByURLId(id)
 
-    @GetMapping("/count/{id}")
-    fun findClickCountByURLId(
-        @PathVariable id: String
-    ): ClickCountResponse = clickService.countClicksByURLId(id)
+    @GetMapping("/count/{timeInterval}")
+    fun findClickCount(
+        @PathVariable timeInterval : TimeInterval,
+        @RequestParam(required = false) id : String?,
+        @RequestBody(required = false) body: ClickCountRequest?
+    ) : List<ClickTimeIntervalPopulation> = clickService.findClickCount(timeInterval,id,body)
 
-    @GetMapping("/count/hour")
-    fun findAllURLClicksCountPerHour(): List<ClickCountPerHourResponse> =
-        clickService.findAllURLClicksCountPerHour()
-
-    @GetMapping("/count/day")
-    fun findAllURLClicksCountPerDay(): List<ClickCountPerDayResponse> =
-        clickService.findAllURLClicksCountPerDay()
-
-    @GetMapping("/count/hour/{id}")
-    fun findAllURLClicksCountPerHourByURLId(@PathVariable id: String): List<ClickCountPerHourResponse> =
-        clickService.findAllURLClicksCountPerHourByURLId(id)
-
-    @GetMapping("/count/day/{id}")
-    fun findAllURLClicksCountPerDayByURLId(@PathVariable id: String): List<ClickCountPerDayResponse> =
-        clickService.findAllURLClicksCountPerDayByURLId(id)
 }

@@ -1,11 +1,10 @@
 package com.example.clickservice.controller.model
 
-import com.example.clickservice.service.model.aggregation.id.ClickPerHourPopulationId
-import com.example.clickservice.service.model.aggregation.population.ClickPerHourPopulation
+import com.example.clickservice.service.model.aggregation.id.ClickTimeIntervalPopulationId
 
 
 class ClickCountPerHourResponse(
-    val _id : ClickPerHourPopulationId,
+    val _id : ClickTimeIntervalPopulationId,
     val count: Long
 ){
     constructor(clickPerHourPopulation: ClickPerHourPopulation) : this(

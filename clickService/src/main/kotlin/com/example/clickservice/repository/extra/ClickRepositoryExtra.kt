@@ -1,24 +1,18 @@
 package com.example.clickservice.repository.extra
 
-import com.example.clickservice.service.model.aggregation.population.ClickPerDayPopulation
-import com.example.clickservice.service.model.aggregation.population.ClickPerHourPopulation
+import com.example.clickservice.enums.TimeInterval
 import com.example.clickservice.service.model.aggregation.population.ClickPopulation
+import com.example.clickservice.service.model.aggregation.population.ClickTimeIntervalPopulation
+import com.example.clickservice.service.model.request.ClickCountRequest
 import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import java.util.*
 
 
 interface ClickRepositoryExtra {
     fun findAllURLClickCountByDate(
-        startDate: Date,
-        endDate: Date
+        body: ClickCountRequest
     ): AggregationResults<ClickPopulation>
 
-    fun findAllURLClicksCountPerHour(): AggregationResults<ClickPerHourPopulation>
-
-    fun findAllURLClicksCountPerDay(): AggregationResults<ClickPerDayPopulation>
-
-    fun findAllURLClicksCountPerHourByURLId(URLId : String): AggregationResults<ClickPerHourPopulation>
-
-    fun findAllURLClicksCountPerDayByURLId(URLId: String): AggregationResults<ClickPerDayPopulation>
+    fun findClickCount(timeInterval: TimeInterval, id: String?, body: ClickCountRequest?): AggregationResults<ClickTimeIntervalPopulation>
 
 }

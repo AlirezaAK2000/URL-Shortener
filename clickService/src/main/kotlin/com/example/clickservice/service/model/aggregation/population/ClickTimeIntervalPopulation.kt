@@ -1,11 +1,11 @@
 package com.example.clickservice.service.model.aggregation.population
 
-import com.example.clickservice.service.model.aggregation.id.ClickPerHourPopulationId
+import com.example.clickservice.service.model.aggregation.id.ClickTimeIntervalPopulationId
 import org.springframework.data.annotation.Id
 
-data class ClickPerHourPopulation(
+data class ClickTimeIntervalPopulation(
     @Id
-    val _id : ClickPerHourPopulationId,
+    val _id : ClickTimeIntervalPopulationId,
     val count: Long
 ){
     companion object {

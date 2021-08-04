@@ -1,12 +1,12 @@
 package com.example.clickservice.repository.impl
 
+import com.example.clickservice.enums.TimeInterval
 import com.example.clickservice.repository.entity.Click
 import com.example.clickservice.repository.extra.ClickRepositoryExtra
-import com.example.clickservice.service.model.aggregation.id.ClickPerDayPopulationId
-import com.example.clickservice.service.model.aggregation.id.ClickPerHourPopulationId
-import com.example.clickservice.service.model.aggregation.population.ClickPerDayPopulation
-import com.example.clickservice.service.model.aggregation.population.ClickPerHourPopulation
+import com.example.clickservice.service.model.aggregation.id.ClickTimeIntervalPopulationId
 import com.example.clickservice.service.model.aggregation.population.ClickPopulation
+import com.example.clickservice.service.model.aggregation.population.ClickTimeIntervalPopulation
+import com.example.clickservice.service.model.request.ClickCountRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -23,17 +23,53 @@ class ClickRepositoryImpl(
 ) : ClickRepositoryExtra {
 
     companion object {
-        const val YEAR_OPERATOR = "year"
-        const val DAYOFYEAR_OPERATOR = "dayOfYear"
-        const val HOUR_OPERATOR = "hour"
+        private const val YEAR_OPERATOR = "year"
+        private const val DAYCARE_OPERATOR: String = "dayOfYear"
+        private const val HOUR_OPERATOR = "hour"
+
+        val HOUR_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
+            .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.YEAR)
+            .andExpression("$DAYCARE_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.DAY)
+            .andExpression(("$HOUR_OPERATOR(${Click.CLICK_TIME})")).`as`(ClickTimeIntervalPopulationId.HOUR)
+
+        val DAY_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
+            .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.YEAR)
+            .andExpression("$DAYCARE_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.DAY)
+
+        val HOUR_SORT_STAGE = Aggregation.sort(
+            Sort.by(
+                Sort.Direction.DESC,
+                "_id.${ClickTimeIntervalPopulationId.YEAR}",
+                "_id.${ClickTimeIntervalPopulationId.DAY}",
+                "_id.${ClickTimeIntervalPopulationId.HOUR}"
+            )
+        )
+
+        val DAY_SORT_STAGE = Aggregation.sort(
+            Sort.by(
+                Sort.Direction.DESC,
+                "_id.${ClickTimeIntervalPopulationId.YEAR}",
+                "_id.${ClickTimeIntervalPopulationId.DAY}"
+            )
+        )
+
+        val HOUR_GROUP_STAGE = Aggregation.group(
+            ClickTimeIntervalPopulationId.YEAR,
+            ClickTimeIntervalPopulationId.DAY,
+            ClickTimeIntervalPopulationId.HOUR
+        ).count().`as`(ClickTimeIntervalPopulation.COUNT)
+
+        val DAY_GROUP_STAGE = Aggregation.group(
+            ClickTimeIntervalPopulationId.YEAR,
+            ClickTimeIntervalPopulationId.DAY
+        ).count().`as`(ClickTimeIntervalPopulation.COUNT)
     }
 
     override fun findAllURLClickCountByDate(
-        startDate: Date,
-        endDate: Date
+        body: ClickCountRequest
     ): AggregationResults<ClickPopulation> {
 
-        val criteria = Criteria().andOperator(Criteria.where(Click.CLICK_TIME).gte(startDate).lte(endDate))
+        val criteria = Criteria().andOperator(Criteria.where(Click.CLICK_TIME).gte(body.start).lte(body.end))
         val matcherStage = Aggregation.match(criteria)
         val groupStage = Aggregation.group(Click.URL_ID).count().`as`(ClickPopulation.COUNT)
         val sortStage = Aggregation.sort(Sort.by(Sort.Direction.DESC, ClickPopulation.COUNT))
@@ -48,49 +84,43 @@ class ClickRepositoryImpl(
         )
     }
 
-    override fun findAllURLClicksCountPerHour(): AggregationResults<ClickPerHourPopulation> =
-        findAllURLClicksCountPerHourFinalStages(arrayListOf())
+    override fun findClickCount(
+        timeInterval: TimeInterval,
+        id: String?,
+        body: ClickCountRequest?
+    ): AggregationResults<ClickTimeIntervalPopulation> {
+        val pipeline = arrayListOf<AggregationOperation>()
 
-    override fun findAllURLClicksCountPerDay(): AggregationResults<ClickPerDayPopulation> =
-        findAllURLClicksCountPerDayFinalStages(arrayListOf())
-
-    override fun findAllURLClicksCountPerHourByURLId(URLId: String): AggregationResults<ClickPerHourPopulation> {
-        val matchStage = Aggregation.match(
-            Criteria.where(Click.URL_ID).`is`(URLId)
-        )
-        return findAllURLClicksCountPerHourFinalStages(arrayListOf(matchStage))
-    }
-
-    override fun findAllURLClicksCountPerDayByURLId(URLId: String): AggregationResults<ClickPerDayPopulation> {
-        val matchStage = Aggregation.match(
-            Criteria.where(Click.URL_ID).`is`(URLId)
-        )
-        return findAllURLClicksCountPerDayFinalStages(arrayListOf(matchStage))
-    }
-
-    private fun findAllURLClicksCountPerHourFinalStages(pipeline: MutableList<AggregationOperation>): AggregationResults<ClickPerHourPopulation> {
-        val projectStage = Aggregation.project(Click.CLICK_TIME)
-            .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickPerHourPopulationId.YEAR)
-            .andExpression("$DAYOFYEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickPerHourPopulationId.DAY)
-            .andExpression(("$HOUR_OPERATOR(${Click.CLICK_TIME})")).`as`(ClickPerHourPopulationId.HOUR)
-        pipeline.add(projectStage)
-
-        val groupStage = Aggregation.group(
-            ClickPerHourPopulationId.YEAR,
-            ClickPerHourPopulationId.DAY,
-            ClickPerHourPopulationId.HOUR
-        ).count().`as`(ClickPerHourPopulation.COUNT)
-        pipeline.add(groupStage)
-
-        val sortStage = Aggregation.sort(
-            Sort.by(
-                Sort.Direction.DESC,
-                "_id.${ClickPerHourPopulationId.YEAR}",
-                "_id.${ClickPerHourPopulationId.DAY}",
-                "_id.${ClickPerHourPopulationId.HOUR}"
+        id?.let {
+            pipeline.add(
+                Aggregation.match(
+                    Criteria.where(Click.URL_ID).`is`(it)
+                )
             )
-        )
-        pipeline.add(sortStage)
+        }
+
+        body?.let {
+            pipeline.add(
+                Aggregation.match(
+                    Criteria().andOperator(Criteria.where(Click.CLICK_TIME).gte(body.start).lte(body.end))
+                )
+            )
+        }
+
+        when (timeInterval) {
+            TimeInterval.DAY -> pipeline.add(DAY_PROJECTION_STAGE)
+            TimeInterval.HOUR -> pipeline.add(HOUR_PROJECTION_STAGE)
+        }
+
+        when (timeInterval) {
+            TimeInterval.DAY -> pipeline.add(DAY_GROUP_STAGE)
+            TimeInterval.HOUR -> pipeline.add(HOUR_GROUP_STAGE)
+        }
+
+        when (timeInterval) {
+            TimeInterval.DAY -> pipeline.add(DAY_SORT_STAGE)
+            TimeInterval.HOUR -> pipeline.add(HOUR_SORT_STAGE)
+        }
 
         val aggregation = Aggregation.newAggregation(
             pipeline
@@ -99,43 +129,11 @@ class ClickRepositoryImpl(
         return mongoTemplate.aggregate(
             aggregation,
             Click.COLLECTION_NAME,
-            ClickPerHourPopulation::class.java
+            ClickTimeIntervalPopulation::class.java
         )
+
+
     }
 
-
-    private fun findAllURLClicksCountPerDayFinalStages(pipeline: MutableList<AggregationOperation>): AggregationResults<ClickPerDayPopulation> {
-
-        val projectStage = Aggregation.project(Click.CLICK_TIME)
-            .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickPerDayPopulationId.YEAR)
-            .andExpression("$DAYOFYEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickPerDayPopulationId.DAY)
-        pipeline.add(projectStage)
-
-        val groupStage = Aggregation.group(
-            ClickPerDayPopulationId.YEAR,
-            ClickPerDayPopulationId.DAY
-        ).count().`as`(ClickPerDayPopulation.COUNT)
-        pipeline.add(groupStage)
-
-        val sortStage = Aggregation.sort(
-            Sort.by(
-                Sort.Direction.DESC,
-                "_id.${ClickPerHourPopulationId.YEAR}",
-                "_id.${ClickPerHourPopulationId.DAY}"
-            )
-        )
-        pipeline.add(sortStage)
-
-        val aggregation = Aggregation.newAggregation(
-            pipeline
-        )
-
-        return mongoTemplate.aggregate(
-            aggregation,
-            Click.COLLECTION_NAME,
-            ClickPerDayPopulation::class.java
-        )
-
-    }
 
 }
