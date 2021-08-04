@@ -11,7 +11,6 @@ import java.util.*
 @Document(ShortURL.COLLECTION_NAME)
 class ShortURL(
 
-    @Indexed
     @Id
     val id: String,
 
@@ -21,6 +20,7 @@ class ShortURL(
     @Field(CREATE_DATE)
     val createDate : Date = Date(),
 
+    @Indexed
     @Field(ORIGINAL_URL_HASH)
     val originalURLHash:String = HashLib.generateHash(originalURL)
 

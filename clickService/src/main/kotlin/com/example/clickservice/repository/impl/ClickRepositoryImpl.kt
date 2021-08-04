@@ -27,16 +27,16 @@ class ClickRepositoryImpl(
         private const val DAYCARE_OPERATOR: String = "dayOfYear"
         private const val HOUR_OPERATOR = "hour"
 
-        val HOUR_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
+        private val HOUR_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
             .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.YEAR)
             .andExpression("$DAYCARE_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.DAY)
             .andExpression(("$HOUR_OPERATOR(${Click.CLICK_TIME})")).`as`(ClickTimeIntervalPopulationId.HOUR)
 
-        val DAY_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
+        private val DAY_PROJECTION_STAGE = Aggregation.project(Click.CLICK_TIME)
             .andExpression("$YEAR_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.YEAR)
             .andExpression("$DAYCARE_OPERATOR(${Click.CLICK_TIME})").`as`(ClickTimeIntervalPopulationId.DAY)
 
-        val HOUR_SORT_STAGE = Aggregation.sort(
+        private val HOUR_SORT_STAGE = Aggregation.sort(
             Sort.by(
                 Sort.Direction.DESC,
                 "_id.${ClickTimeIntervalPopulationId.YEAR}",
@@ -45,7 +45,7 @@ class ClickRepositoryImpl(
             )
         )
 
-        val DAY_SORT_STAGE = Aggregation.sort(
+        private val DAY_SORT_STAGE = Aggregation.sort(
             Sort.by(
                 Sort.Direction.DESC,
                 "_id.${ClickTimeIntervalPopulationId.YEAR}",
@@ -53,13 +53,13 @@ class ClickRepositoryImpl(
             )
         )
 
-        val HOUR_GROUP_STAGE = Aggregation.group(
+        private val HOUR_GROUP_STAGE = Aggregation.group(
             ClickTimeIntervalPopulationId.YEAR,
             ClickTimeIntervalPopulationId.DAY,
             ClickTimeIntervalPopulationId.HOUR
         ).count().`as`(ClickTimeIntervalPopulation.COUNT)
 
-        val DAY_GROUP_STAGE = Aggregation.group(
+        private val DAY_GROUP_STAGE = Aggregation.group(
             ClickTimeIntervalPopulationId.YEAR,
             ClickTimeIntervalPopulationId.DAY
         ).count().`as`(ClickTimeIntervalPopulation.COUNT)
