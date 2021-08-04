@@ -118,18 +118,16 @@ class ClickRepositoryImpl(
         }
 
         when (timeInterval) {
-            TimeInterval.DAY -> pipeline.add(DAY_PROJECTION_STAGE)
-            TimeInterval.HOUR -> pipeline.add(HOUR_PROJECTION_STAGE)
-        }
-
-        when (timeInterval) {
-            TimeInterval.DAY -> pipeline.add(DAY_GROUP_STAGE)
-            TimeInterval.HOUR -> pipeline.add(HOUR_GROUP_STAGE)
-        }
-
-        when (timeInterval) {
-            TimeInterval.DAY -> pipeline.add(DAY_SORT_STAGE)
-            TimeInterval.HOUR -> pipeline.add(HOUR_SORT_STAGE)
+            TimeInterval.DAY -> {
+                pipeline.add(DAY_PROJECTION_STAGE)
+                pipeline.add(DAY_GROUP_STAGE)
+                pipeline.add(DAY_SORT_STAGE)
+            }
+            TimeInterval.HOUR -> {
+                pipeline.add(HOUR_PROJECTION_STAGE)
+                pipeline.add(HOUR_GROUP_STAGE)
+                pipeline.add(HOUR_SORT_STAGE)
+            }
         }
 
         val aggregation = Aggregation.newAggregation(
