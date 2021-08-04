@@ -20,9 +20,6 @@ class ClickController(
         @RequestBody body: ClickCountRequest
     ): List<ClickCountResponse> = clickService.countClicks(body)
 
-    @GetMapping
-    fun findAllClicks(): List<ClickResponse> = clickService.findAll()
-
     @GetMapping("/{id}")
     fun findByURLId(
         @PathVariable id: String

@@ -6,5 +6,8 @@ custom:
   baseurl : localhost:8080
   topicName : click
   pageSize : 5
+  microservice :
+    name : clickService
+    url : http://localhost:8090/api/clicks
 server:
   port: 8080

@@ -51,8 +51,6 @@ class ClickService(
             ClickCountPerDayResponse(it)
         }
 
-    fun findAll() = clickRepository.findAll().map { ClickResponse(it) }
-
 }
 
 

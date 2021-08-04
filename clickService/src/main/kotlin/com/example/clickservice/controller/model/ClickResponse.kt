@@ -11,7 +11,6 @@ import java.util.*
 data class ClickResponse(
     val id: String,
     val URLId: String,
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "UTC")
     val clickTime: Date?
 ){
     constructor(click: Click):this(
