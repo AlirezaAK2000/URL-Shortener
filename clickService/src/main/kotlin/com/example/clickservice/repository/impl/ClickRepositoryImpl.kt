@@ -66,17 +66,27 @@ class ClickRepositoryImpl(
     }
 
     override fun findAllURLClickCountByDate(
-        body: ClickCountRequest
+        body: ClickCountRequest?
     ): AggregationResults<ClickPopulation> {
 
-        val criteria = Criteria().andOperator(Criteria.where(Click.CLICK_TIME).gte(body.start).lte(body.end))
-        val matcherStage = Aggregation.match(criteria)
-        val groupStage = Aggregation.group(Click.URL_ID).count().`as`(ClickPopulation.COUNT)
-        val sortStage = Aggregation.sort(Sort.by(Sort.Direction.DESC, ClickPopulation.COUNT))
+        val pipeline = arrayListOf<AggregationOperation>()
+
+        body?.let {
+            pipeline.add(
+                Aggregation.match(
+                    Criteria().andOperator(
+                        Criteria.where(Click.CLICK_TIME).gte(body.start).lte(body.end)
+                    )
+                )
+            )
+        }
+
+        pipeline.add(Aggregation.group(Click.URL_ID).count().`as`(ClickPopulation.COUNT))
+
+        pipeline.add(Aggregation.sort(Sort.by(Sort.Direction.DESC, ClickPopulation.COUNT)))
+
         val aggregation = Aggregation.newAggregation(
-            matcherStage,
-            groupStage,
-            sortStage
+            pipeline
         )
 
         return mongoTemplate.aggregate(

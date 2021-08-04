@@ -10,7 +10,7 @@ import java.util.*
 
 interface ClickRepositoryExtra {
     fun findAllURLClickCountByDate(
-        body: ClickCountRequest
+        body: ClickCountRequest?
     ): AggregationResults<ClickPopulation>
 
     fun findClickCount(timeInterval: TimeInterval, id: String?, body: ClickCountRequest?): AggregationResults<ClickTimeIntervalPopulation>
