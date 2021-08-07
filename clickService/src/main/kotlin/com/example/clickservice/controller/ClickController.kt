@@ -6,7 +6,6 @@ import com.example.clickservice.controller.model.ClickTimeIntervalResponse
 import com.example.clickservice.enums.TimeInterval
 import com.example.clickservice.service.model.request.ClickCountRequest
 import com.example.clickservice.service.ClickService
-import com.example.clickservice.service.model.aggregation.population.ClickTimeIntervalPopulation
 import org.springframework.web.bind.annotation.*
 
 

@@ -5,7 +5,6 @@ import com.example.clickservice.controller.model.ClickResponse
 import com.example.clickservice.controller.model.ClickTimeIntervalResponse
 import com.example.clickservice.enums.TimeInterval
 import com.example.clickservice.repository.ClickRepository
-import com.example.clickservice.service.model.aggregation.population.ClickTimeIntervalPopulation
 import com.example.clickservice.service.model.request.ClickCountRequest
 import org.springframework.stereotype.Service
 

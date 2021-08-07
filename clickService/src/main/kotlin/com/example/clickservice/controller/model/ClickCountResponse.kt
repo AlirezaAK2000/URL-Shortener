@@ -1,6 +1,5 @@
 package com.example.clickservice.controller.model
 
-import com.example.clickservice.repository.entity.Click
 import com.example.clickservice.service.model.aggregation.population.ClickPopulation
 
 data class ClickCountResponse(

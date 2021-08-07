@@ -1,28 +1,32 @@
 package com.example.urlshortener.service
 
 import com.example.urlshortener.client.ClickServiceClient
-import com.example.urlshortener.client.model.ClickCountPerDayResponse
-import com.example.urlshortener.client.model.ClickCountPerHourResponse
+import com.example.urlshortener.client.model.ClickCountRequest
 import com.example.urlshortener.client.model.ClickCountResponse
+import com.example.urlshortener.client.model.ClickResponse
+import com.example.urlshortener.client.model.ClickTimeIntervalResponse
+import com.example.urlshortener.enums.TimeInterval
 import org.springframework.stereotype.Service
 
 @Service
 class ClickServiceService(
     val clickServiceClient: ClickServiceClient
 ) {
-    fun findClickCountByURLId(
+    fun countClicks(
+        body: ClickCountRequest?
+    ): List<ClickCountResponse> = clickServiceClient.countClicks(body)
+
+    fun findByURLId(
         id: String
-    ): ClickCountResponse = clickServiceClient.findClickCountByURLId(id)
+    ): List<ClickResponse>? = clickServiceClient.findByURLId(id)
 
-    fun findAllURLClicksCountPerHour(): List<ClickCountPerHourResponse> =
-        clickServiceClient.findAllURLClicksCountPerHour()
-
-    fun findAllURLClicksCountPerDay(): List<ClickCountPerDayResponse> = clickServiceClient.findAllURLClicksCountPerDay()
-
-    fun findAllURLClicksCountPerHourByURLId(id: String): List<ClickCountPerHourResponse> =
-        clickServiceClient.findAllURLClicksCountPerHourByURLId(id)
-
-    fun findAllURLClicksCountPerDayByURLId(id: String): List<ClickCountPerDayResponse> =
-        clickServiceClient.findAllURLClicksCountPerDayByURLId(id)
+    fun findClickCount(
+        timeInterval: TimeInterval,
+        id: String?,
+        body: ClickCountRequest?
+    ): List<ClickTimeIntervalResponse> = if (body == null) clickServiceClient.findClickCountWithoutBody(
+        timeInterval,
+        id
+    ) else clickServiceClient.findClickCount(timeInterval, id ,body)
 
 }
