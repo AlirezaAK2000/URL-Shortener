@@ -4,5 +4,5 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 
 
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class URLIsNotValid(msg: String = "url is not valid!") : RuntimeException(msg)

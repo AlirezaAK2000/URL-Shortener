@@ -2,15 +2,17 @@ package com.example.clickservice.repository.entity
 
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
+
 @Document(Click.COLLECTION_NAME)
-data class Click (
+class Click (
     @Id
-    val id : ObjectId = ObjectId.get(),
+    val id : String = ObjectId.get().toString(),
 
     @Field(URL_ID)
     val URLId :String,
