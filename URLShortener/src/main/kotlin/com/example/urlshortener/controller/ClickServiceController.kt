@@ -3,7 +3,6 @@ package com.example.urlshortener.controller
 import com.example.urlshortener.client.model.ClickCountRequest
 import com.example.urlshortener.client.model.ClickCountResponse
 import com.example.urlshortener.client.model.ClickResponse
-import com.example.urlshortener.client.model.ClickTimeIntervalResponse
 import com.example.urlshortener.enums.TimeInterval
 import com.example.urlshortener.service.ClickServiceService
 import org.springframework.web.bind.annotation.*
@@ -25,11 +24,5 @@ class ClickServiceController(
         @PathVariable id: String
     ): List<ClickResponse>? = clickServiceService.findByURLId(id)
 
-    @GetMapping("/count/{timeInterval}")
-    fun findClickCount(
-        @PathVariable timeInterval: TimeInterval,
-        @RequestParam(required = false) id: String?,
-        @RequestBody(required = false) body: ClickCountRequest?
-    ): List<ClickTimeIntervalResponse> = clickServiceService.findClickCount(timeInterval, id, body)
 
 }

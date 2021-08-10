@@ -11,11 +11,12 @@ import java.util.concurrent.ConcurrentHashMap
 @Component
 class HistogramCreationJob(
     val histogramRepository: ClickHistogramRepository,
-    val concurrentHashMap: ConcurrentHashMap<String , Long>
+    val concurrentHashMap: ConcurrentHashMap<String, Long>
 ) {
     @Scheduled(cron = "* * * * * *")
-    fun updateHistogram(){
-        histogramRepository.bulkAddition(concurrentHashMap.toMap())
+    fun updateHistogram() {
+        if (!concurrentHashMap.isEmpty())
+            histogramRepository.bulkAddition(concurrentHashMap.toMap())
         concurrentHashMap.clear()
     }
 }

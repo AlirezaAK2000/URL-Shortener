@@ -25,11 +25,5 @@ class ClickController(
         @PathVariable id: String
     ): List<ClickResponse>? = clickService.findByURLId(id)
 
-    @PostMapping("/count/{timeInterval}")
-    fun findClickCount(
-        @PathVariable timeInterval : TimeInterval,
-        @RequestParam(required = false) id : String?,
-        @RequestBody(required = false) body: ClickCountRequest?
-    ) : List<ClickTimeIntervalResponse> = clickService.findClickCount(timeInterval,id,body)
 
 }
